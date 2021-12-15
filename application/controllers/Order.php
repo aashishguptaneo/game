@@ -18,6 +18,10 @@ function __construct()
 		foreach ($orders as $key => $order) {
 			$orders[$key]['items'] = $this->Orders_Model->single_order_items($order['id']);
 		}
+		// echo "<pre>";
+		// print_r($orders);
+		// echo "</pre>";
+		// exit;
 		$data['orders'] =$orders;
 		$this->load->view('frontend/order',$data);
 	}

@@ -8,7 +8,7 @@
                <h3>Order History</h3>
                <ul>
                   <li><i class="fa fa-home"></i></li>
-                  <li><a href="<?php echo base_url(); ?>">Home</a></li>
+                  <li><a href="<?=base_url(); ?>">Home</a></li>
                   <li><i class="fa fa-angle-right"></i></li>
                   <li>Order</li>
                </ul>
@@ -29,10 +29,9 @@
                   <table class="table">
                      <thead>
                         <tr>
-                           <th>Product</th>
-                           <th>Product Id</th>
+                           <th>Order ID</th>
+                           <th>Kinguin Order Id</th>
                            <th>Price</th>
-                           <th>Quantity</th>
                            <th>Address</th>
                         </tr>
                      </thead>
@@ -43,24 +42,22 @@
                         <tr class="shop-cart-item">
                            <td class="game-cart-product">
                               <a href="#">
-                                 <p><?php echo $value['name']; ?></p>
+                                 <p><?=$value['id']; ?></p>
                               </a>
                            </td>
                            <td class="game-cart-price">
                               <a href="#">
-                                 <p><?php echo $value['kinguinId']; ?></p>
+                                 <p><?=$value['kinguin_order_id']; ?></p>
                               </a>
                            </td>
                            <td class="game-cart-price">
                               <a href="#">
-                                 <p><?php echo $value['price']; ?></p>
+                                 <p><?=$value['order_total']; ?></p>
                               </a>
                            </td>
-                           <td class="game-cart-price">
-                              <p><?php echo $value['qty']; ?></p>
-                           </td>
+
                            <td class="game-cart-total">
-                              <p><?php echo $value['address']; ?></p>
+                              <p><?=$value['address']; ?></p>
                            </td>
                         </tr>
                         <?php  } ?>

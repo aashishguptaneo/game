@@ -14,10 +14,11 @@ $config['business'] = 'sb-6aglk1269749@business.example.com';
 $config['paypal_lib_ipn_log_file'] = BASEPATH . 'logs/paypal_ipn.log';
 $config['paypal_lib_ipn_log'] = TRUE;
 
-// Where are the buttons located at 
+// Where are the buttons located at
 $config['paypal_lib_button_path'] = 'buttons';
 
 // What is the default currency?
-$config['paypal_lib_currency_code'] = 'USD';
+$config['paypal_lib_currency_code'] = 'EUR';
+// $config['paypal_lib_currency_code'] = 'USD';
 
 ?>

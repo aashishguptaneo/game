@@ -150,8 +150,8 @@ class Welcome extends CI_Controller {
 								}, $items);
 								$this->db->insert_batch('order_items', $items);
 
-								$returnURL = base_url().'welcome/success';
-								$cancelURL = base_url().'welcome/cancel';
+								$returnURL = base_url().'welcome/success?order_id='.$id;
+								$cancelURL = base_url().'welcome/cancel?order_id='.$id;
 								$userID = $this->session->userdata('uid');
 								$logo = base_url().'assets/img/logo.png';
 								$this->paypal_lib->add_field('return', $returnURL);
@@ -173,10 +173,8 @@ class Welcome extends CI_Controller {
 
 	}
 
-	function CreateOrderInKin($order_id)
+	function CreateOrderInKinGuin($order_id,$items)
 	{
-		// $order_id = 1;
-		$items =  $this->db->where(['order_id'=>$order_id])->get('order_items')->result();
 		$products['products'] = [];
 		foreach ($items as $key => $item) {
 			$products['products'][] = [
@@ -203,27 +201,130 @@ class Welcome extends CI_Controller {
 		    // echo 'Error:' . curl_error($ch);
 		}
 		curl_close($ch);
-		$result = json_decode($result);
-
-		echo "<pre>";
-		print_r($result);
-		echo "</pre>";
-
-		exit;
+		$data = json_decode($result);
+		$this->db->where(["id" => $order_id])->update('orders',["kinguin_order_id" => $data->orderId]);
 	}
+
 	function success(){
 			$paypalInfo = $this->input->get();
-			$order_id = $this->session->userdata('order_id');
-			$this->CreateOrderInKin($order_id);
-			$data['PayerID'] = $paypalInfo['PayerID'];
-			$data['order'] = $this->db->where(['id'=>$order_id])->get('order_items')->row();
-			$data['order']['items']  = $this->db->where(['order_id'=>$order_id])->get('order_items')->result();
+			$order_id = $_GET['order_id'];
+			$order = $this->db->where(['id'=>$order_id])->get('order_items')->row();
+			$data['order_id'] = $_GET['order_id'];
+			$order->items  = $this->db->where(['order_id'=>$order_id])->get('order_items')->result();
+			if(empty($order->kinguin_order_id)){
+				$this->CreateOrderInKinGuin($order_id,$order->items);
+			}
+			// $data['PayerID'] = $paypalInfo['PayerID'];
+			$data['order'] = $order;
 			$this->load->view('paypal/success', $data);
 	}
 	function cancel(){
+		$order_id = $_GET['order_id'];
+		$this->db->where(['order_id'=>$order_id])->delete('order_items');
+		$this->db->where(['id'=>$order_id])->delete('orders');
 		$this->load->view('paypal/cancel');
 	}
 
+ public function processOrder(){
+		$order_id = $_POST['id'];
+		$order = $this->db->where(['id'=>$order_id])->get('order_items')->row();
+		$order->items  = $this->db->where(['order_id'=>$order_id])->get('order_items')->result();
+		// if(empty($order->kinguin_order_id)){
+		// 	$this->CreateOrderInKinGuin($order_id,$order->items);
+		//  	echo json_encode(["code" => 201,"msg" => "Order Creation in Kinguin is Processed",]);
+		// 	exit;
+		// }else{
+			$kinguinOrederId = $order->kinguin_order_id;
+			$url =  'https://gateway.kinguin.net/esa/api/v1/order/'.$kinguinOrederId;
+			$ch = curl_init();
+			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+			$headers = array();
+			$headers[] = 'X-Api-Key: d9430deb28efea8df425f446a59aeb86';
+			curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+			$result = curl_exec($ch);
+			if (curl_errno($ch)) {
+				echo json_encode(["code" => 100,"msg" => curl_error($ch)]);
+				exit;
+			}
+			curl_close ($ch);
+			$orderInfo = json_decode($result);
+			if(isset($orderInfo->dispatch)){
+				$dispatch = $orderInfo->dispatch;
+				$url =  'https://gateway.kinguin.net/esa/api/v1/order/dispatch/keys?dispatchId='.$dispatch->dispatchId;
+				$ch = curl_init();
+				curl_setopt($ch, CURLOPT_URL, $url);
+				curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+				curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+				$headers = array();
+				$headers[] = 'X-Api-Key: d9430deb28efea8df425f446a59aeb86';
+				curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+				$result = curl_exec($ch);
+				if (curl_errno($ch)) {
+					echo json_encode(["code" => 100,"msg" => curl_error($ch)]);
+					exit;
+				}
+				curl_close ($ch);
+				$dispatchInfo = json_decode($result);
+				foreach ($dispatchInfo as $dis) {
+					$this->db->where(["order_id" => $order_id,"product_id" => $dis->kinguinId])->update('order_items',["kinguin_key" => $dis->serial]);
+				}
+				echo json_encode(["code" => 200,"msg" =>"Order Information Has Been Submitted"]);
+				exit;
+			}else{
+				echo json_encode(["code" => 202,"msg" =>"Please wait for dispatch"]);
+				exit;
+			}
+
+		// }
+
+ }
+ public function Demo()
+ {
+//  	$order_id = 6;
+//
+// // orderId
+// 	$kinguinOrederId = $result->orderId;
+
+	// $url =  'https://gateway.kinguin.net/esa/api/v1/order/'.$kinguinOrederId;
+	// $ch = curl_init();
+	// curl_setopt($ch, CURLOPT_URL, $url);
+	// curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	// curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+	// $headers = array();
+	// $headers[] = 'X-Api-Key: d9430deb28efea8df425f446a59aeb86';
+	// curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+	// $result = curl_exec($ch);
+	// if (curl_errno($ch)) {
+	// 	echo 'Error:' . curl_error($ch);
+	// }
+	// curl_close ($ch);
+	// $orderInfo = json_decode($result);
+	// $dispatch = $orderInfo->dispatch;
+	//
+	//
+	//
+	//
+	// $url =  'https://gateway.kinguin.net/esa/api/v1/order/dispatch/keys?dispatchId='.$dispatch->dispatchId;
+	// $ch = curl_init();
+	// curl_setopt($ch, CURLOPT_URL, $url);
+	// curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	// curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+	// $headers = array();
+	// $headers[] = 'X-Api-Key: d9430deb28efea8df425f446a59aeb86';
+	// curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+	// $result = curl_exec($ch);
+	// if (curl_errno($ch)) {
+	// 	echo 'Error:' . curl_error($ch);
+	// }
+	// curl_close ($ch);
+	// $dispatchInfo = json_decode($result);
+	// foreach ($dispatchInfo as $dis) {
+	// 	$this->db->where(["order_id" => $order_id,"product_id" => $dis->kinguinId])->update('order_items',["kinguin_key" => $dis->serial]);
+	// }
+
+ }
 
 
 	public function notfind()
