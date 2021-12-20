@@ -8,6 +8,32 @@ function CheckIfProductLive($pid)
 {
   return $pid;
 }
+function CheckBalance()
+{
+  $ch = curl_init();
+  curl_setopt($ch, CURLOPT_URL, 'https://gateway.kinguin.net/esa/api/v1/balance');
+  curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+  curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+  $headers = array();
+  $headers[] = 'X-Api-Key: d9430deb28efea8df425f446a59aeb86';
+  curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+  $result = curl_exec($ch);
+  if (curl_errno($ch)) {
+    echo 'Error:' . curl_error($ch);
+  }
+  curl_close ($ch);
+  $balance = json_decode($result);
+  return $balance->balance;
+}
+function ReturnSalePrice($price)
+{
+  $ci =& get_instance();
+  if($ci->config->item('extra_amount')){
+    return $price +  (($price / 100) * $ci->config->item('extra_amount'));
+  }else{
+    return $price;
+  }
+}
 function CartTotal()
 {
   $ci =& get_instance();
