@@ -214,9 +214,7 @@ class Welcome extends CI_Controller {
 		$data = json_decode($result);
 
 		$this->db->where(["id" => $order_id])->update('orders',["kinguin_order_id" => $data->orderId]);
-		// echo $order_id;
-		// print_r($data);
-		// exit;
+	
 	}
 
 	function success(){
@@ -226,7 +224,7 @@ class Welcome extends CI_Controller {
 			$data['order_id'] = $_GET['order_id'];
 			$order->items  = $this->db->where(['order_id'=>$order_id])->get('order_items')->result();
 			if(empty($order->kinguin_order_id)){
-				// $this->CreateOrderInKinGuin($order_id,$order->items);
+				$this->CreateOrderInKinGuin($order_id,$order->items);
 			}
 			// $data['PayerID'] = $paypalInfo['PayerID'];
 			$data['order'] = $order;
