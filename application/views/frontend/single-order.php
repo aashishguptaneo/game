@@ -29,33 +29,44 @@
                   <table class="table">
                      <thead>
                         <tr>
-                           <th style="width:10%">Order ID</th>
-                           <th style="width:20%">Kinguin Order Id</th>
+                          <th style="width:10%">Sr no.</th>
+                           <th style="width:20%">Product</th>
+                           <th style="width:10%">Product Id</th>
+                           <th style="width:10%">Key</th>
                            <th style="width:10%">Price</th>
+                           <th style="width:10%">Quantity</th>
                            <th>Address</th>
                         </tr>
                      </thead>
                      <tbody>
                         <?php
-                           foreach($orders as $value){
+                           foreach($order['items'] as $k=>$value){
                              ?>
                         <tr class="shop-cart-item">
                            <td class="game-cart-product">
-                              <a href="<?=base_url()."OrderInfo?id=".$value['id']?>" >
-                                 <p><?=$value['id']; ?></p>
+                             <?=$k+1?>
+                           </td>
+                           <td class="game-cart-product">
+                              <a href="<?=base_url()."welcome/product_single/".$value['product_id']?>">
+                                 <p><?=$value['title']; ?></p>
                               </a>
                            </td>
                            <td class="game-cart-price">
-                                 <a href="<?=base_url()."OrderInfo?id=".$value['id']?>" >
-                                 <p><?=$value['kinguin_order_id']; ?></p>
-                                   </a>
+                              <a href="<?=base_url()."welcome/product_single/".$value['product_id']?>">
+                                 <p><?=$value['product_id']; ?></p>
+                              </a>
                            </td>
                            <td class="game-cart-price">
-                                 <p><?=$value['order_total']; ?></p>
+                                 <p><?=$value['kinguin_key']; ?></p>
                            </td>
-
+                           <td class="game-cart-price">
+                                 <p><?=$value['subtotal']; ?></p>
+                           </td>
+                           <td class="game-cart-price">
+                              <p><?=$value['qty']; ?></p>
+                           </td>
                            <td class="game-cart-total">
-                              <p><?=$value['address'].",".$value['city'].",".$value['country']; ?></p>
+                                <p><?=$order['address'].",".$order['city'].",".$order['country']; ?></p>
                            </td>
                         </tr>
                         <?php  } ?>

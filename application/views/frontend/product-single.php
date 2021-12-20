@@ -45,7 +45,7 @@
                   <p><?=isset($product_details->description) ? $product_details->description : "" ?></p>
                </div>
                <div class="single-shop-price">
-                  <p>Price:<span>$<?=$product_details->price; ?></span></p>
+                  <p>Price:<span>$<?=ReturnSalePrice($product_details->price); ?></span></p>
                   <p>Available:<span>In Stock</span></p>
                </div>
                <div class="quantity">
@@ -66,17 +66,17 @@
                   <a href="#"
                     class="game-btn add-to-cart"
                     data-product_id="<?=$product_details->kinguinId?>"
-                    data-price="<?=$product_details->price?>"
+                      data-price="<?=ReturnSalePrice($product_details->price)?>"
                     data-title="<?=$product_details->name?>"
                     data-image="<?=isset($product->coverImageOriginal) ? $product->coverImageOriginal : base_url()."assets/img/noimage.jpeg"?>"
                   >Add To Cart<span></span>
                   </a>
                   <a href="#"
                     class="game-btn add-to-wishlist"
-                    data-product_id="<?=$product_details->kinguinId?>"
-                    data-price="<?=$product_details->price?>"
-                    data-title="<?=$product_details->name?>"
-                    data-image="<?=isset($product->coverImageOriginal) ? $product->coverImageOriginal : base_url()."assets/img/noimage.jpeg"?>"
+                  data-product_id="<?=$product_details->kinguinId?>"
+                  data-price="<?=ReturnSalePrice($product_details->price)?>"
+                  data-title="<?=$product_details->name?>"
+                  data-image="<?=isset($product->coverImageOriginal) ? $product->coverImageOriginal : base_url()."assets/img/noimage.jpeg"?>"
                   >Wishlist<span></span>
                 </a>
                </div>

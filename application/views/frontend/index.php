@@ -71,7 +71,7 @@
                                             class="add-to-cart"
                                             href="<?=base_url().'cart'?>"
                                             data-product_id="<?=$value->kinguinId?>"
-                                            data-price="<?=$value->price?>"
+                                            data-price="<?=ReturnSalePrice($value->price)?>"
                                             data-title="<?=$value->name?>"
                                              data-image="<?=isset($value->coverImageOriginal) ? $value->coverImageOriginal : base_url()."assets/img/noimage.jpeg"?>"
                                                 >
@@ -85,7 +85,7 @@
                                        <div class="header-cart <?=isset($wishlist) && in_array($value->kinguinId,$wishlist) ? 'active' : "" ?>">
                                           <a href="wishlist"
                                           data-product_id="<?=$value->kinguinId?>"
-                                          data-price="<?=$value->price?>"
+                                          data-price="<?=ReturnSalePrice($value->price)?>"
                                           data-title="<?=$value->name?>"
                                           data-image="<?=isset($value->coverImageOriginal) ? $value->coverImageOriginal : "" ?>"
                                           class="add-to-wishlist">
@@ -99,7 +99,7 @@
                            <div class="game-action">
                               <div class="game-price">
                                  <h4>
-                                   <?='$ '.$value->price; ?>
+                                   <?='$ '.ReturnSalePrice($value->price); ?>
                                  </h4>
                                  <?php $offer = rand(1,20); ?>
                                  <p class="off">

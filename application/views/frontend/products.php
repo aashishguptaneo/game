@@ -58,7 +58,7 @@
                         </div>
                         <a href="wishlist"
                           data-product_id="<?=$product->kinguinId?>"
-                          data-price="<?=$product->price?>"
+                          data-price="<?=ReturnSalePrice($product->price)?>"
                           data-title="<?=$product->name?>"
                           data-image="<?=isset($product->coverImageOriginal) ? $product->coverImageOriginal : base_url()."assets/img/noimage.jpeg"?>"
                           class="add-to-wishlist">
@@ -68,7 +68,7 @@
                           class="add-to-cart"
                           href="<?=base_url().'cart'?>"
                           data-product_id="<?=$product->kinguinId?>"
-                          data-price="<?=$product->price?>"
+                         data-price="<?=ReturnSalePrice($product->price)?>"
                           data-title="<?=$product->name?>"
                           data-image="<?=isset($product->coverImageOriginal) ? $product->coverImageOriginal : base_url()."assets/img/noimage.jpeg"?>"
                               >
@@ -77,7 +77,7 @@
 
                         <div class="game-action">
                            <div class="game-price">
-                              <h4><?='$ '.$product->price; ?></h4>
+                              <h4><?='$ '.ReturnSalePrice($product->price); ?></h4>
                            </div>
                            <div class="game-buy">
                               <a href="<?=base_url('welcome/checkout').'/'.$product->kinguinId; ?>" class="game-btn-outline">Buy Now!</a>
