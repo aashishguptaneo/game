@@ -13,5 +13,10 @@ class Orders_Model extends CI_Model{
 				$result = $query->result_array();
 				return !empty($result)?$result:false;
     }
+	function singleOrder($id) {
+				$query = $this->db->select('*')->from('orders')->where('id',$id)->get();
+				$result = $query->result_array();
+				return !empty($result)?$result:false;
+    }
 
 }
