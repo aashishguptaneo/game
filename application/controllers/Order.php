@@ -14,15 +14,40 @@ function __construct()
 	public function index()
 	{
 		$uid = $this->session->userdata('uid');
-		$orders = $this->Orders_Model->get_all_orders($uid);
-		foreach ($orders as $key => $order) {
-			$orders[$key]['items'] = $this->Orders_Model->single_order_items($order['id']);
+		if($uid){
+			$orders = $this->Orders_Model->get_all_orders($uid);
+			foreach ($orders as $key => $order) {
+				$orders[$key]['items'] = $this->Orders_Model->single_order_items($order['id']);
+			}
+			$data['orders'] =$orders;
+			$this->load->view('frontend/order',$data);
+		}else{
+			$cart = base_url()."signin";
+			echo "<script>
+			alert('Please Login To access Your orders');
+			window.location.href='".$cart."';
+			</script>";
+			exit;
 		}
-		// echo "<pre>";
-		// print_r($orders);
-		// echo "</pre>";
-		// exit;
-		$data['orders'] =$orders;
-		$this->load->view('frontend/order',$data);
+	}
+
+	public function OrderInfo()
+	{
+		$uid = $this->session->userdata('uid');
+		if($uid){
+			$orders = $this->Orders_Model->singleOrder($_GET['id']);
+			foreach ($orders as $key => $order) {
+				$orders[$key]['items'] = $this->Orders_Model->single_order_items($order['id']);
+			}
+			$data['order'] =$orders[0];
+			$this->load->view('frontend/single-order',$data);
+		}else{
+			$cart = base_url()."signin";
+			echo "<script>
+			alert('Please Login To access Your orders');
+			window.location.href='".$cart."';
+			</script>";
+			exit;
+		}
 	}
 }

@@ -129,44 +129,54 @@ class Welcome extends CI_Controller {
 									$order_total+=$_POST['price'][$key]*$_POST['qty'][$key];
 									$items[] = ["product_id" => $value,"price" => $_POST['price'][$key],"title" => $_POST['name'][$key],"image" =>  $_POST['image'][$key],"qty" => $_POST['qty'][$key],"subtotal" => $_POST['price'][$key]*$_POST['qty'][$key]];
 								}
-								$form_data = [
-									'first_name' => $_POST['first_name'],
-									'last_name' => $_POST['last_name'],
-									'country' => $_POST['country'],
-									'address' => $_POST['address'],
-									'city' => $_POST['city'],
-									'email' => $_POST['email'],
-									'mobile' => $_POST['mobile'],
-									'user_id' => $uid,
-									'note' => $_POST['note'],
-									'order_total' => $order_total,
-									'created_at' => date( 'Y-m-d H:i:s')
-								];
-								$id = $this->Model_welcome->checkout($form_data);
-								$this->session->set_userdata('order_id',$id);
+								$balance = CheckBalance();
+								if($balance >= $order_total){
+										$form_data = [
+											'first_name' => $_POST['first_name'],
+											'last_name' => $_POST['last_name'],
+											'country' => $_POST['country'],
+											'address' => $_POST['address'],
+											'city' => $_POST['city'],
+											'email' => $_POST['email'],
+											'mobile' => $_POST['mobile'],
+											'user_id' => $uid,
+											'note' => $_POST['note'],
+											'order_total' => $order_total,
+											'created_at' => date( 'Y-m-d H:i:s')
+										];
+										$id = $this->Model_welcome->checkout($form_data);
+										$this->session->set_userdata('order_id',$id);
 
-								$items = array_map(function($arr) use ($id){
-										return $arr + ['order_id' => $id];
-								}, $items);
-								$this->db->insert_batch('order_items', $items);
+										$items = array_map(function($arr) use ($id){
+												return $arr + ['order_id' => $id];
+										}, $items);
+										$this->db->insert_batch('order_items', $items);
 
-								$returnURL = base_url().'welcome/success?order_id='.$id;
-								$cancelURL = base_url().'welcome/cancel?order_id='.$id;
-								$userID = $this->session->userdata('uid');
-								$logo = base_url().'assets/img/logo.png';
-								$this->paypal_lib->add_field('return', $returnURL);
-								$this->paypal_lib->add_field('cancel_return', $cancelURL);
+										$returnURL = base_url().'welcome/success?order_id='.$id;
+										$cancelURL = base_url().'welcome/cancel?order_id='.$id;
+										$userID = $this->session->userdata('uid');
+										$logo = base_url().'assets/img/logo.png';
+										$this->paypal_lib->add_field('return', $returnURL);
+										$this->paypal_lib->add_field('cancel_return', $cancelURL);
 
-							foreach ($_POST['kinguinId'] as $k2 => $v) {
-								$this->paypal_lib->add_field('item_name_'.($k2+1),$_POST['name'][$k2]);
-								$this->paypal_lib->add_field('item_number_'.($k2+1),$v);
-								$this->paypal_lib->add_field('amount_'.($k2+1),$_POST['price'][$k2]);
-								$this->paypal_lib->add_field('quantity_'.($k2+1), $_POST['qty'][$k2]);
-							}
-							$this->paypal_lib->add_field('custom', $userID);
-							$this->paypal_lib->image($logo);
-							$this->paypal_lib->paypal_auto_form();
+									foreach ($_POST['kinguinId'] as $k2 => $v) {
+										$this->paypal_lib->add_field('item_name_'.($k2+1),$_POST['name'][$k2]);
+										$this->paypal_lib->add_field('item_number_'.($k2+1),$v);
+										$this->paypal_lib->add_field('amount_'.($k2+1),$_POST['price'][$k2]);
+										$this->paypal_lib->add_field('quantity_'.($k2+1), $_POST['qty'][$k2]);
+									}
+									$this->paypal_lib->add_field('custom', $userID);
+									$this->paypal_lib->image($logo);
+									$this->paypal_lib->paypal_auto_form();
 
+								}else{
+									$cart = base_url()."welcome/checkout";
+									echo "<script>
+									alert('Please Ask Admin to add Balanace');
+									window.location.href='".$cart."';
+									</script>";
+									exit;
+								}
 						}
 				}
 		}
@@ -202,20 +212,28 @@ class Welcome extends CI_Controller {
 		}
 		curl_close($ch);
 		$data = json_decode($result);
+
 		$this->db->where(["id" => $order_id])->update('orders',["kinguin_order_id" => $data->orderId]);
+		// echo $order_id;
+		// print_r($data);
+		// exit;
 	}
 
 	function success(){
 			$paypalInfo = $this->input->get();
 			$order_id = $_GET['order_id'];
-			$order = $this->db->where(['id'=>$order_id])->get('order_items')->row();
+			$order = $this->db->where(['id'=>$order_id])->get('orders')->row();
 			$data['order_id'] = $_GET['order_id'];
 			$order->items  = $this->db->where(['order_id'=>$order_id])->get('order_items')->result();
 			if(empty($order->kinguin_order_id)){
-				$this->CreateOrderInKinGuin($order_id,$order->items);
+				// $this->CreateOrderInKinGuin($order_id,$order->items);
 			}
 			// $data['PayerID'] = $paypalInfo['PayerID'];
 			$data['order'] = $order;
+			// echo "<pre>";
+			// print_r($data);
+			// echo "</pre>";
+			// exit;
 			$this->load->view('paypal/success', $data);
 	}
 	function cancel(){
@@ -227,13 +245,13 @@ class Welcome extends CI_Controller {
 
  public function processOrder(){
 		$order_id = $_POST['id'];
-		$order = $this->db->where(['id'=>$order_id])->get('order_items')->row();
+		$order = $this->db->where(['id'=>$order_id])->get('orders')->row();
 		$order->items  = $this->db->where(['order_id'=>$order_id])->get('order_items')->result();
-		// if(empty($order->kinguin_order_id)){
-		// 	$this->CreateOrderInKinGuin($order_id,$order->items);
-		//  	echo json_encode(["code" => 201,"msg" => "Order Creation in Kinguin is Processed",]);
-		// 	exit;
-		// }else{
+		if(empty($order->kinguin_order_id)){
+			$this->CreateOrderInKinGuin($order_id,$order->items);
+		 	echo json_encode(["code" => 201,"msg" => "Order Creation in Kinguin is Processed",]);
+			exit;
+		}else{
 			$kinguinOrederId = $order->kinguin_order_id;
 			$url =  'https://gateway.kinguin.net/esa/api/v1/order/'.$kinguinOrederId;
 			$ch = curl_init();
@@ -268,61 +286,72 @@ class Welcome extends CI_Controller {
 				curl_close ($ch);
 				$dispatchInfo = json_decode($result);
 				foreach ($dispatchInfo as $dis) {
-					$this->db->where(["order_id" => $order_id,"product_id" => $dis->kinguinId])->update('order_items',["kinguin_key" => $dis->serial]);
+					$this->db->where(["order_id" => $order_id,"product_id" => $dis->kinguinId])->update('order_items',[
+						"kinguin_key" => $dis->serial,
+						"key_type" => $dis->type
+					]);
 				}
-				echo json_encode(["code" => 200,"msg" =>"Order Information Has Been Submitted"]);
+
+				$validate=$this->db->where(['id'=>$order->user_id])->get('tblusers')->row();
+	      if($validate){
+	        $this->session->set_userdata('uid',$validate->id);
+	        $this->session->set_userdata('fname',$validate->FirstName);
+	        $this->session->set_userdata('profile_pic',$validate->profile_pic);
+	        $this->session->set_userdata('user',$validate);
+				}
+				echo json_encode(["code" => 200,"msg" =>"Your Order Has Been Created Successfully"]);
 				exit;
 			}else{
 				echo json_encode(["code" => 202,"msg" =>"Please wait for dispatch"]);
 				exit;
 			}
 
-		// }
+		}
 
  }
  public function Demo()
  {
-//  	$order_id = 6;
+ 	$order_id = 1;
 //
 // // orderId
-// 	$kinguinOrederId = $result->orderId;
+	$kinguinOrederId = "8UZCOXPNIWR";
 
-	// $url =  'https://gateway.kinguin.net/esa/api/v1/order/'.$kinguinOrederId;
-	// $ch = curl_init();
-	// curl_setopt($ch, CURLOPT_URL, $url);
-	// curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	// curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-	// $headers = array();
-	// $headers[] = 'X-Api-Key: d9430deb28efea8df425f446a59aeb86';
-	// curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-	// $result = curl_exec($ch);
-	// if (curl_errno($ch)) {
-	// 	echo 'Error:' . curl_error($ch);
-	// }
-	// curl_close ($ch);
-	// $orderInfo = json_decode($result);
-	// $dispatch = $orderInfo->dispatch;
+	$url =  'https://gateway.kinguin.net/esa/api/v1/order/'.$kinguinOrederId;
+	$ch = curl_init();
+	curl_setopt($ch, CURLOPT_URL, $url);
+	curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+	curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+	$headers = array();
+	$headers[] = 'X-Api-Key: d9430deb28efea8df425f446a59aeb86';
+	curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+	$result = curl_exec($ch);
+	if (curl_errno($ch)) {
+		echo 'Error:' . curl_error($ch);
+	}
+	curl_close ($ch);
+	$orderInfo = json_decode($result);
+	$dispatch = $orderInfo->dispatch;
+
 	//
 	//
 	//
-	//
-	// $url =  'https://gateway.kinguin.net/esa/api/v1/order/dispatch/keys?dispatchId='.$dispatch->dispatchId;
-	// $ch = curl_init();
-	// curl_setopt($ch, CURLOPT_URL, $url);
-	// curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-	// curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
-	// $headers = array();
-	// $headers[] = 'X-Api-Key: d9430deb28efea8df425f446a59aeb86';
-	// curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
-	// $result = curl_exec($ch);
-	// if (curl_errno($ch)) {
-	// 	echo 'Error:' . curl_error($ch);
-	// }
-	// curl_close ($ch);
-	// $dispatchInfo = json_decode($result);
-	// foreach ($dispatchInfo as $dis) {
-	// 	$this->db->where(["order_id" => $order_id,"product_id" => $dis->kinguinId])->update('order_items',["kinguin_key" => $dis->serial]);
-	// }
+		$url =  'https://gateway.kinguin.net/esa/api/v1/order/dispatch/keys?dispatchId='.$dispatch->dispatchId;
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+		$headers = array();
+		$headers[] = 'X-Api-Key: d9430deb28efea8df425f446a59aeb86';
+		curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+		$result = curl_exec($ch);
+		if (curl_errno($ch)) {
+			echo 'Error:' . curl_error($ch);
+		}
+		curl_close ($ch);
+		$dispatchInfo = json_decode($result);
+		foreach ($dispatchInfo as $dis) {
+			$this->db->where(["order_id" => $order_id,"product_id" => $dis->kinguinId])->update('order_items',["kinguin_key" => $dis->serial]);
+		}
 
  }
 
