@@ -51,6 +51,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 */
 $route['products'] = 'Products/allProducts';
 $route['processOrder'] = 'Welcome/processOrder';
+$route['OrderInfo'] = 'Order/OrderInfo';
 $route['search'] = 'Products/Search';
 $route['default_controller'] = 'welcome';
 $route['404_override'] = '';
