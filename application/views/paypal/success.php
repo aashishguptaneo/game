@@ -156,6 +156,8 @@
             type:'post',
             dataType : 'json',
             success: function(response) {
+
+              console.log(response);
               if(response.code == 201 || response.code == 202){
                 setTimeout(function(){
                   Process(id);
